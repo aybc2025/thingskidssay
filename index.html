@@ -1,0 +1,350 @@
+<!doctype html>
+
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>דברים שהילדים אומרים</title>
+  <style>
+    :root {
+      --bg: #0f172a;          /* slate-900 */
+      --card: #111827;        /* gray-900 */
+      --muted: #94a3b8;       /* slate-400 */
+      --text: #e5e7eb;        /* gray-200 */
+      --accent: #22c55e;      /* green-500 */
+      --accent-2: #ef4444;    /* red-500 */
+      --primary: #38bdf8;     /* sky-400 */
+      --btn: #1f2937;         /* gray-800 */
+      --btn-hover: #0b1220;   /* darker */
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 80% -10%, #172554, transparent 60%),
+                  radial-gradient(1000px 600px at -10% 110%, #1e3a8a, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      display: grid; place-items: center;
+    }
+    .app {
+      width: min(720px, 94vw);
+      margin: 24px; padding: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 8px 6px 16px;
+      border-bottom: 1px solid rgba(148,163,184,.15);
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: clamp(20px, 3.6vw, 28px);
+      font-weight: 800; letter-spacing: .3px;
+      display: inline-flex; align-items: center; gap: .5ch;
+    }
+    .badge { font-size: 12px; color: var(--muted); }.screen { display: none; }
+.screen.active { display: block; }
+
+.card {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: calc(var(--radius) - 6px);
+  padding: clamp(16px, 3.6vw, 28px);
+}
+
+.quote {
+  font-size: clamp(20px, 5vw, 32px);
+  line-height: 1.35; font-weight: 700;
+  margin: 6px 0 18px;
+}
+.quote::before, .quote::after { content: '"'; color: var(--primary); opacity: .9; }
+
+.choices {
+  display: grid; gap: 12px; grid-template-columns: 1fr; margin-top: 10px;
+}
+@media (min-width: 520px) { .choices { grid-template-columns: 1fr 1fr; } }
+
+.btn {
+  -webkit-tap-highlight-color: transparent;
+  appearance: none; border: 0; outline: none;
+  background: var(--btn); color: var(--text);
+  padding: 14px 16px; border-radius: 14px; font-size: 18px; font-weight: 700;
+  cursor: pointer; transition: transform .06s ease, background .2s ease, opacity .2s ease;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.btn:hover { background: var(--btn-hover); }
+.btn:active { transform: translateY(1px) scale(.99); }
+.btn.primary { background: linear-gradient(180deg, #0ea5e9, #0284c7); border-color: rgba(255,255,255,.12); }
+.btn.primary:hover { filter: brightness(1.05); }
+
+.feedback { display: flex; align-items: center; gap: 10px; margin-top: 10px; min-height: 32px; }
+.tick { color: var(--accent); font-weight: 800; }
+.cross { color: var(--accent-2); font-weight: 800; }
+
+.meta { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 14px; margin-top: 8px; }
+.progress {
+  width: 100%; height: 8px; background: rgba(148,163,184,.2); border-radius: 999px; overflow: hidden; margin-top: 8px;
+}
+.progress > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #22d3ee, #22c55e); }
+
+.center { text-align: center; }
+.dim { color: var(--muted); }
+
+  </style>
+</head>
+<body>
+  <main class="app" role="application" aria-label="משחק חידון — דברים שהילדים אומרים">
+    <header>
+      <div class="title">🗣️ דברים שהילדים אומרים <span class="badge">גרסה פשוטה</span></div>
+      <div id="scoreHead" class="dim" aria-live="polite"></div>
+    </header><!-- Start Screen -->
+<section id="screen-start" class="screen active">
+  <div class="card center">
+    <p class="dim">האם תדעו למי מהשניים שייך כל ציטוט?</p>
+    <button id="btnStart" class="btn primary" style="margin-top:14px">התחל משחק</button>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="dim" id="whoNames"></div>
+  </div>
+</section>
+
+<!-- Game Screen -->
+<section id="screen-game" class="screen">
+  <div class="card">
+    <div class="meta"><span id="roundLabel">שאלה 1/10</span><span id="scoreLabel">0 נקודות</span></div>
+    <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+    <p class="quote" id="quoteText">…</p>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div class="center"><button id="btnNext" class="btn" style="display:none; margin-top:8px">שאלה הבאה</button></div>
+  </div>
+</section>
+
+<!-- End Screen -->
+<section id="screen-end" class="screen">
+  <div class="card center">
+    <h2 style="margin: 6px 0 0">סיימנו!</h2>
+    <p id="finalText" class="quote" style="font-size: clamp(18px, 4.5vw, 26px);"></p>
+    <button id="btnReplay" class="btn primary">שחק שוב</button>
+  </div>
+</section>
+
+  </main>  <script>
+  // === הגדרות קלות לשינוי ===
+  const CONFIG = {
+    title: 'דברים שהילדים אומרים',
+    rounds: 10, // מספר השאלות במשחק
+    A: 'תומר', // שם ילד/ה 1 — אפשר לשנות כאן
+    B: 'נטע', // שם ילד/ה 2 — ואפשר לשנות כאן
+    quotes: [
+      { text: 'אני חושב במקום אני שוכב', by: 'A' },
+      { text: 'גדנים במקום דגנים', by: 'A' },
+      { text: "צ'וקצ'יק במקום צ'ופצ'יק", by: 'A' },
+      { text: 'לבלות אותי במקום ללוות אותי', by: 'A' },
+      { text: 'תחתיכה במקום חתיכה', by: 'A' },
+      { text: 'אני תוחתך במקום אני חותך', by: 'A' },
+      { text: 'אני מתורגן במקום אני מאורגן', by: 'A' },
+      { text: 'כבישה במקום כבשה', by: 'A' },
+      { text: 'מה זה בגלל במקום למה', by: 'A' },
+      { text: 'אני חסוי במקום אני מכוסה', by: 'A' },
+      { text: 'אני מחובא במקום אני מוחבא/מתחבא', by: 'A' },
+      { text: 'אני מצדק אותך במקום אני מתקן אותך', by: 'A' },
+      { text: 'ביצות במקום ביצים', by: 'A' },
+      { text: 'ויטמימים במקום ויטמינים', by: 'A' },
+      { text: 'מיימן במקום ממיין', by: 'A' },
+      { text: 'פרפריקה במקום פפריקה', by: 'A' },
+      { text: 'תוספת במקום תופסת', by: 'A' },
+      { text: 'איזה בן/בת את/ה במקום בן כמה את/ה', by: 'A' },
+      { text: 'אבא עושה גושות במקום אבא עושה בושות', by: 'A' },
+      { text: 'יוסי אגולעפיה במקום יוסי אבולעפיה', by: 'A' },
+      { text: 'שרשון במקום שלשום', by: 'A' },
+      { text: 'נמלות במקום נמלים', by: 'A' },
+      { text: 'להיפסג במקום להיספג', by: 'A' },
+      { text: 'כמו את במקום כמוך', by: 'A' },
+      { text: 'קרחים במקום קוביות קרח', by: 'A' },
+      { text: 'בעבריה מדברים עברית', by: 'A' },
+      { text: 'שני בני אדמים במקום שני בני אדם', by: 'A' },
+      { text: 'כדורי פורח במקום כדורי פורחים', by: 'A' },
+      { text: 'זה השיר שתמיד סווינג אותך', by: 'A' },
+      { text: 'מישהו יכול להקריב אותי במקום מישהו יכול לקרב אותי', by: 'A' },
+      { text: 'תנין במקום תנים', by: 'A' },
+      { text: 'להתחבות במקום להתחבא', by: 'A' },
+      { text: 'לקנח את הטוסיק במקום לנגב את הטוסיק', by: 'A' },
+      { text: 'ארוק במקום ארוך', by: 'A' },
+      { text: 'אמא את משועלת (על משקל מצוננת)', by: 'A' },
+      { text: 'תינוזאור במקום דינוזאור', by: 'A' },
+      { text: 'סרטות במקום סדרות', by: 'A' },
+      { text: 'אתה בני חורים (במקום עתה בני חורין)', by: 'A' },
+      { text: 'בני כיס במקום דמי כיס', by: 'A' },
+      { text: 'אני פשוט במקום אני ערום', by: 'A' },
+      { text: "מגז' במקום בגז'", by: 'A' },
+      { text: 'מקטרינה במקום נקטרינה', by: 'A' },
+      { text: 'הם מוצאי חנים בעיני', by: 'A' },
+      { text: 'דיסקיט במקום דיקסיט', by: 'A' },
+      { text: 'פוצה פוצה במקום רוצה מוצץ', by: 'A' },
+      { text: 'המבונגר במקום המבורגר', by: 'A' },
+      { text: 'שניצולים במקום שניצלונים', by: 'A' },
+      { text: 'מילמלום ליין במקום מילניום ליין', by: 'A' },
+      { text: 'תיתה (פיתה)', by: 'B' },
+      { text: 'טטה (פסטה)', by: 'B' },
+      { text: 'טיטי (ציצי וציפור ודגנים)', by: 'B' },
+      { text: 'ממה (בננה וחלופי לאת זה)', by: 'B' },
+      { text: 'יה (יד)', by: 'B' },
+      { text: 'אש (חנוכייה)', by: 'B' },
+      { text: 'אמה (אמא)', by: 'B' },
+      { text: 'tete (תומר)', by: 'B' },
+      { text: 'גומגום (יוגורט)', by: 'B' },
+      { text: 'תתא (סבתא וסבא)', by: 'B' },
+      { text: 'ססה (ספר)', by: 'B' },
+      { text: 'ניים (מים)', by: 'B' },
+      { text: 'ששה (גשם)', by: 'B' },
+      { text: 'פפה (פרפר)', by: 'B' },
+      { text: 'ניניט (דגנים)', by: 'B' },
+      { text: 'נונוס (חומוס)', by: 'B' },
+      { text: 'דודו (כדור)', by: 'B' },
+      { text: 'טטץ (מוצץ)', by: 'B' },
+      { text: 'פפף (קצף)', by: 'B' },
+      { text: 'פקה (אלפקה)', by: 'B' },
+      { text: 'יוקואיקו (קוקוריקו)', by: 'B' },
+      { text: 'ממש (שמש)', by: 'B' },
+      { text: 'ממת זית (שמן זית)', by: 'B' },
+      { text: 'בבת (לשבת)', by: 'B' },
+      { text: 'חוחוח (לכלוך)', by: 'B' },
+      { text: 'אני גבוה (אני גבוהה)', by: 'B' },
+      { text: 'קוקותיים וקוקו שתיים (שתי קוקיות)', by: 'B' },
+      { text: 'זאת לא התנהגות!', by: 'B' },
+      { text: 'פּלוץ', by: 'B' },
+      { text: 'נגבת (במקום מגבת)', by: 'B' },
+      { text: 'אני תוחתכת תחתיכה במקום אני חותכת חתיכה', by: 'B' },
+      { text: 'שמחה במקום שמיכה', by: 'B' },
+      { text: 'מגריז במקום מרגיז', by: 'B' },
+      { text: 'מעצבנה במקום עצבנית או מעצבנת', by: 'B' },
+      { text: 'בקבוק פלסטר במקום בקבוק פלסטיק', by: 'B' },
+      { text: 'בא לי פטיות במקום אני רוצה פרטיות', by: 'B' },
+      { text: 'פמפמינג במקום קמפינג', by: 'B' },
+      { text: 'סיפנה במקום ספינה', by: 'B' },
+      { text: 'מרזור במקום רמזור', by: 'B' },
+      { text: 'טורטייה במלרע במקום במלעיל', by: 'B' },
+    ]
+  };
+
+  // === קוד המשחק ===
+  const qs = sel => document.querySelector(sel);
+  const scrStart = qs('#screen-start');
+  const scrGame  = qs('#screen-game');
+  const scrEnd   = qs('#screen-end');
+
+  const whoNames = qs('#whoNames');
+  const btnStart = qs('#btnStart');
+  const btnNext  = qs('#btnNext');
+  const btnReplay= qs('#btnReplay');
+
+  const quoteText= qs('#quoteText');
+  const choices  = qs('#choices');
+  const feedback = qs('#feedback');
+  const roundLbl = qs('#roundLabel');
+  const scoreLbl = qs('#scoreLabel');
+  const scoreHead= qs('#scoreHead');
+  const progress = qs('#progressBar');
+  const finalTxt = qs('#finalText');
+
+  document.title = CONFIG.title;
+  whoNames.textContent = `המשתתפים: ${CONFIG.A} מול ${CONFIG.B}`;
+
+  let deck = [];
+  let round = 0;
+  let score = 0;
+
+  function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function sampleQuotes() {
+    const pool = [...CONFIG.quotes];
+    shuffle(pool);
+    // לוקחים עד rounds או מספר הציטוטים הקיים
+    return pool.slice(0, Math.min(CONFIG.rounds, pool.length));
+  }
+
+  function setScreen(screenEl){
+    [scrStart, scrGame, scrEnd].forEach(s => s.classList.remove('active'));
+    screenEl.classList.add('active');
+  }
+
+  function startGame(){
+    deck = sampleQuotes();
+    round = 0; score = 0;
+    scoreHead.textContent = '';
+    nextRound();
+    setScreen(scrGame);
+  }
+
+  function nextRound(){
+    if (round >= CONFIG.rounds || round >= deck.length) {
+      endGame();
+      return;
+    }
+    const q = deck[round];
+    roundLbl.textContent = `שאלה ${round+1}/${CONFIG.rounds}`;
+    progress.style.width = `${((round)/CONFIG.rounds)*100}%`;
+    scoreLbl.textContent = `${score} נקודות`;
+
+    feedback.innerHTML = '';
+    btnNext.style.display = 'none';
+    quoteText.textContent = q.text;
+
+    // מכינים שתי אפשרויות עם ערבוב סדר
+    const options = [
+      { key: 'A', label: CONFIG.A },
+      { key: 'B', label: CONFIG.B }
+    ];
+    shuffle(options);
+
+    choices.innerHTML = '';
+    options.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.type = 'button';
+      b.textContent = opt.label;
+      b.addEventListener('click', () => handleAnswer(opt.key));
+      choices.appendChild(b);
+    });
+  }
+
+  function handleAnswer(chosenKey){
+    // נועלים כפתורים
+    [...choices.children].forEach(btn => btn.disabled = true);
+
+    const correctKey = deck[round].by;
+    const ok = chosenKey === correctKey;
+    if (ok) { score++; feedback.innerHTML = `<span class="tick">✔ נכון!</span>`; }
+    else { feedback.innerHTML = `<span class="cross">✘ לא נכון</span>`; }
+
+    scoreLbl.textContent = `${score} נקודות`;
+    btnNext.style.display = 'inline-block';
+    progress.style.width = `${((round+1)/CONFIG.rounds)*100}%`;
+  }
+
+  function endGame(){
+    setScreen(scrEnd);
+    const total = Math.min(CONFIG.rounds, deck.length);
+    finalTxt.textContent = `קלעת ל־${score} מתוך ${total}.`;
+    scoreHead.textContent = `תוצאה: ${score}/${total}`;
+  }
+
+  // אירועים
+  btnStart.addEventListener('click', startGame);
+  btnNext.addEventListener('click', () => { round++; nextRound(); });
+  btnReplay.addEventListener('click', () => { setScreen(scrStart); });
+  </script></body>
+  </html>
